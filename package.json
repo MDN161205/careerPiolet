@@ -1,0 +1,15 @@
+{
+  "name": "careerpilot-ai",
+  "version": "1.0.0",
+  "description": "An AI-powered placement preparation platform that helps students improve resumes, evaluate ATS compatibility, generate personalized learning roadmaps, receive interview feedback, and track placement readiness.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
