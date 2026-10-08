@@ -1,12 +1,10 @@
 import { useState } from 'react';
 
-export default function Login() {
-  // 1. STATE DEFINITIONS (Before return)
+export default function Login({ onLoginSuccess }) {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 2. EVENT HANDLERS (Before return)
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -27,50 +25,62 @@ export default function Login() {
 
       if (res.ok) {
         localStorage.setItem('token', data.token);
-        setMessage(`Welcome back, ${data.name}!`);
+        if (onLoginSuccess) {
+          onLoginSuccess(data.token);
+        } else {
+          setMessage(`Welcome back, ${data.name || 'User'}!`);
+        }
       } else {
         setMessage(data.message || 'Login failed');
       }
-    } catch {
+    } catch (err) {
+      console.error('Fetch execution error:', err);
       setMessage('Error connecting to backend API');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // 3. UI RENDERING (Inside return)
   return (
-    <div>
-      <h2>Sign in to CareerPilot</h2>
-      <p>Sign in to continue</p>
+    <div style={{ padding: '1.5rem', border: '1px solid #ccc', borderRadius: '8px', textAlign: 'left' }}>
+      <h2>Sign In</h2>
+      <p style={{ color: '#aaa', fontSize: '0.9rem' }}>Sign in to continue</p>
 
       <form onSubmit={handleSubmit}>
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
+        <div style={{ marginBottom: '1rem' }}>
+          <label htmlFor="login-email" style={{ display: 'block', marginBottom: '0.25rem' }}>Email</label>
+          <input
+            id="login-email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            autoComplete="email"
+            required
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+          />
+        </div>
 
-        <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
+        <div style={{ marginBottom: '1rem' }}>
+          <label htmlFor="login-password" style={{ display: 'block', marginBottom: '0.25rem' }}>Password</label>
+          <input
+            id="login-password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            autoComplete="current-password"
+            required
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+          />
+        </div>
 
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" disabled={isSubmitting} style={{ width: '100%', padding: '10px', cursor: 'pointer' }}>
           {isSubmitting ? 'Logging in...' : 'Login'}
         </button>
       </form>
 
-      {message && <p role="alert">{message}</p>}
+      {message && <p style={{ marginTop: '1rem', fontWeight: 'bold' }}>{message}</p>}
     </div>
   );
 }

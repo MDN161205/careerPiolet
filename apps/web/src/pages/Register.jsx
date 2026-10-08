@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function Register() {
+export default function Register({ onLoginSuccess }){
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [message, setMessage] = useState('');
 
@@ -22,7 +22,7 @@ export default function Register() {
       const data = await res.json();
 
       if (res.ok) {
-        localStorage.setItem('token', data.token);
+        onLoginSuccess(data.token);
         setMessage(`Success! Registered as ${data.name}`);
       } else {
         setMessage(data.message || 'Registration failed');

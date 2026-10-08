@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import Register from './pages/Register';
 import Login from './pages/login';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   const [status, setStatus] = useState('Loading...');
   const [mode, setMode] = useState('login');
+  const [token, setToken] = useState(localStorage.getItem('token'));
 
   useEffect(() => {
     fetch('/api/health')
@@ -17,6 +19,16 @@ function App() {
       });
   }, []);
 
+  const handleLoginSuccess = (newToken) => {
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+  };
+
   return (
     <div className="app-shell">
       <header className="site-header">
@@ -26,45 +38,55 @@ function App() {
         <p className="header-note">Your next chapter starts here.</p>
       </header>
 
-      <main className="auth-layout">
-        <section className="welcome-panel">
-          <p className="eyebrow">CAREER DEVELOPMENT, REFOCUSED</p>
-          <h1>Make your next move <em>count.</em></h1>
-          <p className="welcome-copy">
-            Build momentum toward work that fits your ambitions. Sign in to
-            continue, or create an account to get started.
-          </p>
-          <p className="backend-status" role="status">
-            <span className="status-dot" /> API: {status}
-          </p>
-        </section>
+      {token ? (
+        <main className="dashboard-layout">
+          <Dashboard onLogout={handleLogout} />
+        </main>
+      ) : (
+        <main className="auth-layout">
+          <section className="welcome-panel">
+            <p className="eyebrow">CAREER DEVELOPMENT, REFOCUSED</p>
+            <h1>Make your next move <em>count.</em></h1>
+            <p className="welcome-copy">
+              Build momentum toward work that fits your ambitions. Sign in to
+              continue, or create an account to get started.
+            </p>
+            <p className="backend-status" role="status">
+              <span className="status-dot" /> API: {status}
+            </p>
+          </section>
 
-        <section className="auth-card" aria-label="Account access">
-          <div className="auth-switch" role="tablist" aria-label="Account action">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === 'login'}
-              className={mode === 'login' ? 'active' : ''}
-              onClick={() => setMode('login')}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === 'register'}
-              className={mode === 'register' ? 'active' : ''}
-              onClick={() => setMode('register')}
-            >
-              Create account
-            </button>
-          </div>
-          <div className="auth-form">
-            {mode === 'login' ? <Login /> : <Register />}
-          </div>
-        </section>
-      </main>
+          <section className="auth-card" aria-label="Account access">
+            <div className="auth-switch" role="tablist" aria-label="Account action">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'login'}
+                className={mode === 'login' ? 'active' : ''}
+                onClick={() => setMode('login')}
+              >
+                Sign in
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'register'}
+                className={mode === 'register' ? 'active' : ''}
+                onClick={() => setMode('register')}
+              >
+                Create account
+              </button>
+            </div>
+            <div className="auth-form">
+              {mode === 'login' ? (
+                <Login onLoginSuccess={handleLoginSuccess} />
+              ) : (
+                <Register onLoginSuccess={handleLoginSuccess} />
+              )}
+            </div>
+          </section>
+        </main>
+      )}
 
       <footer className="site-footer">CareerPilot AI</footer>
     </div>
