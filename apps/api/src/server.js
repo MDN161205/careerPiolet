@@ -1,10 +1,12 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import careerRoutes from './routes/careerRoutes.js';
 import app from './app.js';
 import connectDB from './config/db.js';
 
-// Connect to MongoDB
+app.use('/api/career', careerRoutes);
+
 connectDB();
 
 const PORT = process.env.PORT || 5000;
