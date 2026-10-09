@@ -27,6 +27,12 @@ export default function Dashboard({ onLogout }) {
   const [resumeAnalysis, setResumeAnalysis] = useState(null);
   const [resumeLoading, setResumeLoading] = useState(false);
 
+  //Sprint 8 Mock Interview State
+  const [mockSession, setMockSession] = useState(null);
+  const [userAnswer, setUserAnswer] = useState('');
+  const [evalResult, setEvalResult] = useState(null);
+  const [mockLoading, setMockLoading] = useState(false);
+  
   const fetchCareerAnalysis = async (token) => {
     setAnalysisLoading(true);
     try {
@@ -122,6 +128,60 @@ export default function Dashboard({ onLogout }) {
 
     fetchProfile();
   }, []);
+
+  // Sprint 8 Mock Interview Functions 
+  const handleStartMock = async () => {
+  setMockLoading(true);
+  setEvalResult(null);
+  setUserAnswer('');
+  const token = localStorage.getItem('token');
+
+  try {
+    const res = await fetch('/api/mock/start', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ targetRole: user?.targetRole }),
+    });
+    const data = await res.json();
+    if (res.ok) setMockSession(data);
+  } catch (err) {
+    console.error('Error starting mock session:', err);
+  } finally {
+    setMockLoading(false);
+  }
+};
+
+const handleSubmitAnswer = async (e) => {
+  e.preventDefault();
+  if (!userAnswer.trim() || !mockSession) return;
+
+  setMockLoading(true);
+  const token = localStorage.getItem('token');
+
+  try {
+    const res = await fetch('/api/mock/evaluate', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        targetRole: mockSession.targetRole,
+        questionId: mockSession.currentQuestion.id,
+        userAnswer,
+      }),
+    });
+    const data = await res.json();
+    if (res.ok) setEvalResult(data);
+  } catch (err) {
+    console.error('Error submitting answer:', err);
+  } finally {
+    setMockLoading(false);
+  }
+};
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -434,6 +494,81 @@ export default function Dashboard({ onLogout }) {
           </div>
         )}
       </div>
+
+      {/* Sprint 8 Mock Interview Section */} 
+      {/* Sprint 8 Mock Interview Simulator Section */}
+<div style={{ margin: '1.5rem 0', background: '#1e1b4b', color: '#fff', padding: '1.2rem', borderRadius: '6px', border: '1px solid #312e81' }}>
+  <h3 style={{ marginTop: 0, color: '#a5b4fc' }}>🎙️ Live Mock Interview Simulator</h3>
+
+  {!mockSession ? (
+    <div>
+      <p style={{ fontSize: '0.9rem', color: '#c7d2fe' }}>
+        Practice an interactive technical interview scenario for <strong>{user?.targetRole || 'Full Stack Developer'}</strong>.
+      </p>
+      <button
+        onClick={handleStartMock}
+        disabled={mockLoading}
+        style={{ padding: '8px 16px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem' }}
+      >
+        {mockLoading ? 'Initializing Session...' : '🚀 Start Mock Interview'}
+      </button>
+    </div>
+  ) : (
+    <div>
+      <p style={{ fontSize: '0.85rem', color: '#818cf8', fontWeight: 'bold' }}>
+        Question #{mockSession.currentQuestion.id} of {mockSession.totalQuestions} ({mockSession.targetRole})
+      </p>
+      <p style={{ fontSize: '1rem', fontWeight: 'bold', margin: '0.5rem 0 1rem 0' }}>
+        "{mockSession.currentQuestion.question}"
+      </p>
+
+      <form onSubmit={handleSubmitAnswer} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <textarea
+          value={userAnswer}
+          onChange={(e) => setUserAnswer(e.target.value)}
+          rows="4"
+          placeholder="Type your spoken or written answer here..."
+          style={{ width: '100%', padding: '8px', boxSizing: 'border-box', background: '#312e81', color: '#fff', border: '1px solid #4338ca', borderRadius: '4px' }}
+        />
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            type="submit"
+            disabled={mockLoading || !userAnswer.trim()}
+            style={{ flex: 1, padding: '8px', background: '#059669', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            {mockLoading ? 'Evaluating...' : 'Submit Answer for Scoring'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMockSession(null)}
+            style={{ padding: '8px 12px', background: '#4b5563', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            End Session
+          </button>
+        </div>
+      </form>
+
+      {evalResult && (
+        <div style={{ marginTop: '1rem', padding: '0.9rem', background: '#312e81', borderRadius: '5px', borderLeft: '4px solid #10b981' }}>
+          <p style={{ margin: 0 }}>
+            <strong>Score:</strong>{' '}
+            <span style={{ color: evalResult.score >= 7 ? '#34d399' : '#fbbf24', fontSize: '1.1rem', fontWeight: 'bold' }}>
+              {evalResult.score} / 10
+            </span>
+          </p>
+          <p style={{ fontSize: '0.85rem', margin: '0.4rem 0 0.25rem 0', color: '#e0e7ff' }}>
+            {evalResult.feedback}
+          </p>
+          {evalResult.missingKeywords.length > 0 && (
+            <p style={{ fontSize: '0.8rem', color: '#fca5a5', margin: '0.25rem 0 0 0' }}>
+              💡 Keywords to include next time: {evalResult.missingKeywords.join(', ')}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )}
+</div>
 
       <button
         onClick={onLogout}
