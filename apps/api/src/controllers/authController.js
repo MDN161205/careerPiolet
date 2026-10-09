@@ -81,12 +81,18 @@ export const getUserProfile = async (req, res) => {
 // @desc    Update user profile details (Sprint 4)
 // @route   PUT /api/auth/profile
 // @access  Private
+// Inside updateUserProfile in apps/api/src/controllers/authController.js:
+// Updated again in sprint 9
 export const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
 
     if (user) {
+      user.name = req.body.name || user.name;
       user.targetRole = req.body.targetRole || user.targetRole;
+      if (req.body.username) {
+        user.username = req.body.username.toLowerCase().trim();
+      }
       user.skills = req.body.skills
         ? (Array.isArray(req.body.skills)
             ? req.body.skills
@@ -101,6 +107,7 @@ export const updateUserProfile = async (req, res) => {
         _id: updatedUser._id,
         name: updatedUser.name,
         email: updatedUser.email,
+        username: updatedUser.username,
         targetRole: updatedUser.targetRole,
         skills: updatedUser.skills,
         experienceLevel: updatedUser.experienceLevel,
@@ -110,6 +117,9 @@ export const updateUserProfile = async (req, res) => {
       res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Username is already taken' });
+    }
     res.status(500).json({ message: error.message });
   }
 };
